@@ -10,6 +10,6 @@ export default class Ram {
   }
 
   async teardown() {
-    // Nothing
+    this.blobs = [];
   }
 }
