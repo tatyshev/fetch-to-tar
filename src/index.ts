@@ -1,3 +1,4 @@
+import { later, toPromise } from './utils';
 import Ram from './ram';
 import Idb from './idb';
 
@@ -24,13 +25,6 @@ interface IStorage {
 }
 
 const BLOCK_SIZE = 512;
-
-const later = (fn: () => void) => setTimeout(fn, 0);
-
-const toPromise = <T>(target: T | Promise<T>) => {
-  const t = typeof target === 'function' ? target() : target;
-  return t instanceof Promise ? t : Promise.resolve(t);
-};
 
 const resolveName = (target: TName, response: Response) => {
   const result = typeof target === 'function' ? target(response) : target;

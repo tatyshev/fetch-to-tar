@@ -1,4 +1,4 @@
-const castPromise = (value: any) => value instanceof Promise ? value : Promise.resolve(value);
+import { toPromise } from './utils';
 
 export const sizeOf = (resp: Response) => Number(resp.headers.get('Content-Length')) || 0;
 
@@ -20,7 +20,7 @@ const loopOverStream = (params: IReadLoopParams) => {
       return;
     }
 
-    const next = castPromise(onChunk(result.value));
+    const next = toPromise(onChunk(result.value));
 
     next.then(() => loopOverStream(params));
     next.catch(onError);
