@@ -1,7 +1,6 @@
 {
   "name": "fetch-to-tar",
-  "version": "1.0.0",
-  "main": "index.js",
+  "version": "0.0.0",
   "author": "Ruslan Tatyshev <ruslan.tatyshev@gmail.com>",
   "license": "MIT"
 }
