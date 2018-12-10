@@ -4,7 +4,7 @@
   "author": "Ruslan Tatyshev <ruslan.tatyshev@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "build": "rollup -c rollup.config.ts"
+    "build": "./scripts/build.sh"
   },
   "devDependencies": {
     "rollup": "^0.67.4",

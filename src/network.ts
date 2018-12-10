@@ -1,0 +1,39 @@
+const castPromise = (value: any) => value instanceof Promise ? value : Promise.resolve(value);
+
+export const sizeOf = (resp: Response) => Number(resp.headers.get('Content-Length')) || 0;
+
+type TChunkCallback = (chunk: Uint8Array) => void | Promise<any>;
+
+interface IReadLoopParams {
+  reader: ReadableStreamReader;
+  onChunk: TChunkCallback;
+  onSuccess: () => void;
+  onError: () => void;
+}
+
+const loopOverStream = (params: IReadLoopParams) => {
+  const { reader, onChunk, onSuccess, onError } = params;
+
+  reader.read().then((result) => {
+    if (result.done && result.value === undefined) {
+      onSuccess();
+      return;
+    }
+
+    const next = castPromise(onChunk(result.value));
+
+    next.then(() => loopOverStream(params));
+    next.catch(onError);
+  });
+};
+
+export const readStream = (reader: ReadableStreamReader, callback: TChunkCallback) => {
+  return new Promise((resolve, reject) => {
+    loopOverStream({
+      reader,
+      onChunk: callback,
+      onSuccess: resolve,
+      onError: reject,
+    });
+  });
+};
