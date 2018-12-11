@@ -6,16 +6,20 @@ import { sizeOf, readStream } from './network';
 import { createFileBlock, createEmptyBlock } from './tar';
 
 type TName = string | Promise<string> | ((resp: Response) => string | Promise<string>);
-type TEntry = [TName, string];
+
+interface IEntry {
+  name: TName;
+  src: string;
+}
 
 interface IPerformEntryProps {
-  entries: TEntry[];
+  entries: IEntry[];
   storage: IStorage;
   onProgress: (value: number) => void;
 }
 
 interface IDefaultProps {
-  entries: TEntry[];
+  entries: IEntry[];
   onProgress?: (value: number, max: number) => void;
 }
 
@@ -37,15 +41,15 @@ const perform = async (props: IPerformEntryProps, i = 0) => {
 
   if (entry == null) return;
 
-  const [tname, url] = entry;
+  const { name, src } = entry;
 
-  const response = await fetch(url);
+  const response = await fetch(src);
 
   if (!response.ok) {
-    throw new Error(`Can't fetch given url "${url}"`);
+    throw new Error(`Can't fetch given url "${src}"`);
   }
 
-  const name = await resolveName(tname, response);
+  const fileName = await resolveName(name, response);
   const size = sizeOf(response);
 
   // Some browser do not support body and body.getReader()
@@ -61,7 +65,7 @@ const perform = async (props: IPerformEntryProps, i = 0) => {
   const reader = response.body.getReader();
   const padding = BLOCK_SIZE - (size % BLOCK_SIZE);
 
-  await storage.addBlob(createFileBlock({ name, size }));
+  await storage.addBlob(createFileBlock({ size, name: fileName }));
 
   await readStream(reader, (chunk) => {
     onProgress(chunk.length / size);
