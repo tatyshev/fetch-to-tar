@@ -8,7 +8,7 @@
   "scripts": {
     "demo": "parcel sandbox/index.html",
     "build": "./scripts/build.sh",
-    "release": "release-it"
+    "release": "npm run build && release-it"
   },
   "devDependencies": {
     "@types/react": "^16.7.13",
