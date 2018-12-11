@@ -2,9 +2,9 @@ type IndexedDB = IDBDatabase & { setVersion?: any };
 type IndexedDBEvent = EventTarget & { result: IndexedDB };
 
 const DEFAULT_STORE_NAME = 'chunks';
-let uid = 0;
 
 export default class Idb {
+  cursor = 0;
   private idb: IndexedDB | null;
   private name: string;
 
@@ -17,16 +17,30 @@ export default class Idb {
     return new Promise((resolve, reject) => {
       this.indexedDb()
         .then((idb) => {
-          uid += 1;
+          this.cursor += 1;
 
           const tx = idb.transaction([DEFAULT_STORE_NAME], 'readwrite');
 
           tx.oncomplete = resolve;
           tx.onerror = reject;
 
-          tx.objectStore(DEFAULT_STORE_NAME).add(blob, uid);
+          tx.objectStore(DEFAULT_STORE_NAME).add(blob, this.cursor);
         })
         .catch(reject);
+    });
+  }
+
+  putBlob(key: any, blob: Blob) {
+    return new Promise((resolve, reject) => {
+      this.indexedDb()
+        .then((idb) => {
+          const tx = idb.transaction([DEFAULT_STORE_NAME], 'readwrite');
+
+          tx.oncomplete = resolve;
+          tx.onerror = reject;
+
+          tx.objectStore(DEFAULT_STORE_NAME).put(blob, key);
+        });
     });
   }
 

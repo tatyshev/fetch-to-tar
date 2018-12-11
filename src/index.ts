@@ -24,7 +24,9 @@ interface IDefaultProps {
 }
 
 interface IStorage {
+  cursor: number;
   addBlob: (blob: Blob) => Promise<any>;
+  putBlob: (key: any, blob: Blob) => Promise<any>;
   getBlobs: () => Promise<Blob[]>;
 }
 
@@ -51,11 +53,13 @@ const perform = async (props: IPerformEntryProps, i = 0) => {
 
   const fileName = await resolveName(name, response);
   const size = sizeOf(response);
+  let realSize = 0;
 
   // Some browser do not support body and body.getReader()
   // We just use whole blob
   if (response.body == null) {
     const blob = await response.blob();
+    realSize = blob.size;
     await storage.addBlob(blob);
     onProgress(1);
     await perform(props, i + 1);
@@ -67,7 +71,11 @@ const perform = async (props: IPerformEntryProps, i = 0) => {
 
   await storage.addBlob(createFileBlock({ size, name: fileName }));
 
+  const headIndex = storage.cursor;
+
   await readStream(reader, (chunk) => {
+    realSize += chunk.length;
+
     let pseudoSize = 1;
 
     if (size !== 0) {
@@ -79,6 +87,13 @@ const perform = async (props: IPerformEntryProps, i = 0) => {
 
     return storage.addBlob(new Blob([chunk]));
   });
+
+  if (size !== realSize) {
+    await storage.putBlob(headIndex, createFileBlock({
+      size: realSize,
+      name: fileName,
+    }));
+  }
 
   await storage.addBlob(createEmptyBlock(padding));
   await perform(props, i + 1);
@@ -105,12 +120,12 @@ export default ({ entries, onProgress }: IDefaultProps): Promise<Blob> => {
 
     performer.then((blob) => {
       if (onProgress) onProgress(entryCount, entryCount);
-      later(() => storage.teardown());
+      // later(() => storage.teardown());
       resolve(blob);
     });
 
     performer.catch((err) => {
-      later(() => storage.teardown());
+      // later(() => storage.teardown());
       reject(err);
     });
   });

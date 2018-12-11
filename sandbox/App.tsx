@@ -10,7 +10,7 @@ interface IState {
 }
 
 const ENTRIES = [
-  { name: 'bootstrap.png', src: 'https://pages.github.com/images/slideshow/bootstrap.png' },
+  { name: '.gitignore', src: 'https://raw.githubusercontent.com/tatyshev/fetch-to-tar/master/.gitignore' },
 ];
 
 export default class App extends Component<{}, IState> {
