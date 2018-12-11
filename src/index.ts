@@ -58,10 +58,11 @@ const perform = async (props: IPerformEntryProps, i = 0) => {
   // Some browser do not support body and body.getReader()
   // We just use whole blob
   if (response.body == null) {
+    onProgress(0.5);
     const blob = await response.blob();
     realSize = blob.size;
     await storage.addBlob(blob);
-    onProgress(1);
+    onProgress(0.5);
     await perform(props, i + 1);
     return;
   }
