@@ -73,7 +73,7 @@ const perform = async (props: IPerformEntryProps, i = 0) => {
     if (size !== 0) {
       onProgress(chunk.length / size);
     } else {
-      pseudoSize = pseudoSize / 20;
+      pseudoSize = pseudoSize / 42;
       onProgress(pseudoSize);
     }
 
