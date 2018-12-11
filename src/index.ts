@@ -67,10 +67,7 @@ const perform = async (props: IPerformEntryProps, i = 0) => {
   }
 
   const reader = response.body.getReader();
-  const padding = BLOCK_SIZE - (size % BLOCK_SIZE);
-
   await storage.addBlob(createFileBlock({ size, name: fileName }));
-
   const headIndex = storage.cursor;
 
   await readStream(reader, (chunk) => {
@@ -95,6 +92,7 @@ const perform = async (props: IPerformEntryProps, i = 0) => {
     }));
   }
 
+  const padding = BLOCK_SIZE - ((size || realSize) % BLOCK_SIZE);
   await storage.addBlob(createEmptyBlock(padding));
   await perform(props, i + 1);
 
@@ -120,12 +118,12 @@ export default ({ entries, onProgress }: IDefaultProps): Promise<Blob> => {
 
     performer.then((blob) => {
       if (onProgress) onProgress(entryCount, entryCount);
-      // later(() => storage.teardown());
+      later(() => storage.teardown());
       resolve(blob);
     });
 
     performer.catch((err) => {
-      // later(() => storage.teardown());
+      later(() => storage.teardown());
       reject(err);
     });
   });

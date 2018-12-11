@@ -60,7 +60,7 @@ export const createFileBlock = (params: IFileParams) => {
   }
 
   block.set(bytes(name), NAME_OFFSET);
-  block.set(bytes('000777', SPACE), MODE_OFFSET);
+  block.set(bytes('000644', SPACE), MODE_OFFSET);
   block.set(bytes(lpad(size, 11), SPACE), SIZE_OFFSET);
   block.set(bytes(lpad(now(), 11), SPACE), TIME_OFFSET);
   block.set(bytes('0'), TYPE_OFFSET);

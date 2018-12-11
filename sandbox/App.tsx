@@ -1,4 +1,5 @@
 /* tslint:disable max-line-length */
+/* tslint:disable no-var-requires */
 
 import fetchToTar from '../src';
 import React, { Component } from 'react';
@@ -10,7 +11,7 @@ interface IState {
 }
 
 const ENTRIES = [
-  { name: '.gitignore', src: 'https://raw.githubusercontent.com/tatyshev/fetch-to-tar/master/.gitignore' },
+  { name: 'hello.txt', src: 'https://raw.githubusercontent.com/tatyshev/fetch-to-tar/master/sandbox/hello.txt' },
 ];
 
 export default class App extends Component<{}, IState> {
