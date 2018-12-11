@@ -96,19 +96,17 @@ const perform = async (props: IPerformEntryProps, i = 0) => {
   const padding = BLOCK_SIZE - ((size || realSize) % BLOCK_SIZE);
   await storage.addBlob(createEmptyBlock(padding));
   await perform(props, i + 1);
-
-  const blobs = await storage.getBlobs();
-
-  return new Blob(blobs);
 };
 
-export default ({ entries, onProgress }: IDefaultProps): Promise<Blob> => {
-  return new Promise((resolve, reject) => {
-    const storage = window.indexedDB ? new Idb() : new Ram();
-    const entryCount = entries.length;
-    let progress = 0;
+export default async ({ entries, onProgress }: IDefaultProps): Promise<Blob> => {
+  const storage = window.indexedDB ? new Idb() : new Ram();
+  const entryCount = entries.length;
 
-    const performer = perform({
+  let progress = 0;
+  let blobs: Blob[] = [];
+
+  try {
+    await perform({
       entries,
       storage,
       onProgress: (value) => {
@@ -117,15 +115,13 @@ export default ({ entries, onProgress }: IDefaultProps): Promise<Blob> => {
       },
     });
 
-    performer.then((blob) => {
-      if (onProgress) onProgress(entryCount, entryCount);
-      later(() => storage.teardown());
-      resolve(blob);
-    });
+    blobs = await storage.getBlobs();
+  } catch (e) {
+    console.error(e);
+  } finally {
+    later(() => storage.teardown());
+  }
 
-    performer.catch((err) => {
-      later(() => storage.teardown());
-      reject(err);
-    });
-  });
+  if (onProgress) onProgress(entryCount, entryCount);
+  return new Blob(blobs);
 };
