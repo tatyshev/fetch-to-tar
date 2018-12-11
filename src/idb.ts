@@ -1,7 +1,15 @@
 type IndexedDB = IDBDatabase & { setVersion?: any };
 type IndexedDBEvent = EventTarget & { result: IndexedDB };
 
+interface ITrack {
+  [key: string]: {
+    updatedAt: number,
+  };
+}
+
 const DEFAULT_STORE_NAME = 'chunks';
+const PREFIX = '__FETCH_TO_TAR_IDB__';
+const TTL = 30 * 60 * 1000; // 30 minutes
 
 export default class Idb {
   cursor = 0;
@@ -10,10 +18,12 @@ export default class Idb {
 
   constructor(name?: string) {
     this.idb = null;
-    this.name = name || `__FETCH_TO_TAR_IDB__.${Date.now()}`;
+    this.name = name || `${PREFIX}.${Date.now()}`;
   }
 
   addBlob(blob: Blob) {
+    this.updated();
+
     return new Promise((resolve, reject) => {
       this.indexedDb()
         .then((idb) => {
@@ -31,6 +41,8 @@ export default class Idb {
   }
 
   putBlob(key: any, blob: Blob) {
+    this.updated();
+
     return new Promise((resolve, reject) => {
       this.indexedDb()
         .then((idb) => {
@@ -81,8 +93,36 @@ export default class Idb {
     });
   }
 
+  private updated() {
+    const stored = window.localStorage[PREFIX];
+    const now = Date.now();
+    let databases: ITrack = {};
+
+    if (stored) {
+      try {
+        databases = JSON.parse(stored);
+      } catch (e) {
+        console.warn('fetchToTar: JSON.parse error');
+      }
+    }
+
+    const names = Object.keys(databases);
+
+    names.forEach((name) => {
+      const { updatedAt } = databases[name];
+      const diff = now - updatedAt;
+      if (diff >= TTL) {
+        window.indexedDB.deleteDatabase(name);
+        delete databases[name];
+      }
+    });
+
+    databases[this.name] = { updatedAt: now };
+    window.localStorage[PREFIX] = JSON.stringify(databases);
+  }
+
   private indexedDb() {
-    if (this.idb) return Promise.resolve(this.idb);
+    if (this.idb != null) return Promise.resolve(this.idb);
 
     return new Promise<IndexedDB>((resolve, reject) => {
       const request = indexedDB.open(this.name, 1);
@@ -90,6 +130,7 @@ export default class Idb {
       request.onsuccess = () => {
         const idb = request.result as IndexedDB;
 
+        this.idb = idb;
         resolve(idb);
 
         idb.onerror =  reject;
