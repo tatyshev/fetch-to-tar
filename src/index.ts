@@ -57,7 +57,7 @@ const perform = async (props: IPerformEntryProps, i = 0) => {
   if (response.body == null) {
     const blob = await response.blob();
     await storage.addBlob(blob);
-    onProgress(blob.size / size);
+    onProgress(1);
     await perform(props, i + 1);
     return;
   }
@@ -68,7 +68,15 @@ const perform = async (props: IPerformEntryProps, i = 0) => {
   await storage.addBlob(createFileBlock({ size, name: fileName }));
 
   await readStream(reader, (chunk) => {
-    onProgress(chunk.length / size);
+    let pseudoSize = 1;
+
+    if (size !== 0) {
+      onProgress(chunk.length / size);
+    } else {
+      pseudoSize = pseudoSize / 20;
+      onProgress(pseudoSize);
+    }
+
     return storage.addBlob(new Blob([chunk]));
   });
 

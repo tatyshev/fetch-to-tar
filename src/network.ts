@@ -1,6 +1,9 @@
 import { toPromise } from './utils';
 
-export const sizeOf = (resp: Response) => Number(resp.headers.get('Content-Length')) || 0;
+export const sizeOf = (resp: Response) => {
+  const length = resp.headers.get('Content-Length');
+  return Number(length) || 0;
+};
 
 type TChunkCallback = (chunk: Uint8Array) => void | Promise<any>;
 
