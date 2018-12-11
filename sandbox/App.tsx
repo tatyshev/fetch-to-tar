@@ -1,5 +1,4 @@
 /* tslint:disable max-line-length */
-/* tslint:disable no-var-requires */
 
 import fetchToTar from '../src';
 import React, { Component } from 'react';
@@ -11,7 +10,9 @@ interface IState {
 }
 
 const ENTRIES = [
-  { name: 'hello.txt', src: 'https://raw.githubusercontent.com/tatyshev/fetch-to-tar/master/sandbox/hello.txt' },
+  { name: 'dracula.png', src: 'https://raw.githubusercontent.com/tatyshev/vscode-antimaterial/master/images/dracula.png' },
+  { name: 'material.png', src: 'https://raw.githubusercontent.com/tatyshev/vscode-antimaterial/master/images/material.png' },
+  { name: 'monokai.png', src: 'https://raw.githubusercontent.com/tatyshev/vscode-antimaterial/master/images/monokai.png' },
 ];
 
 export default class App extends Component<{}, IState> {
