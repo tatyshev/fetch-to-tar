@@ -1,6 +1,6 @@
 {
   "name": "fetch-to-tar",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": "Ruslan Tatyshev <ruslan.tatyshev@gmail.com>",
   "main": "dist/fetch-to-tar.js",
   "module": "dist/fetch-to-tar.mjs",
