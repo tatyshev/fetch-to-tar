@@ -44,7 +44,6 @@ const perform = async (props: IPerformEntryProps, i = 0) => {
   if (entry == null) return;
 
   const { name, src } = entry;
-
   const response = await fetch(src);
 
   if (!response.ok) {
@@ -103,7 +102,7 @@ export default async ({ entries, onProgress }: IDefaultProps): Promise<Blob> => 
   const entryCount = entries.length;
 
   let progress = 0;
-  let blobs: Blob[] = [];
+  let blobs: Blob[] | null = null;
 
   try {
     await perform({
@@ -116,12 +115,17 @@ export default async ({ entries, onProgress }: IDefaultProps): Promise<Blob> => 
     });
 
     blobs = await storage.getBlobs();
+
+    if (onProgress) onProgress(entryCount, entryCount);
   } catch (e) {
     console.error(e);
   } finally {
     later(() => storage.teardown());
   }
 
-  if (onProgress) onProgress(entryCount, entryCount);
+  if (blobs == null) {
+    throw new Error("Can't build tar from empty blobs");
+  }
+
   return new Blob(blobs);
 };

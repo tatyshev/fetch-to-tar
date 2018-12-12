@@ -10,9 +10,10 @@ interface IState {
 }
 
 const ENTRIES = [
-  { name: 'dracula.png', src: 'https://raw.githubusercontent.com/tatyshev/vscode-antimaterial/master/images/dracula.png' },
-  { name: 'material.png', src: 'https://raw.githubusercontent.com/tatyshev/vscode-antimaterial/master/images/material.png' },
-  { name: 'monokai.png', src: 'https://raw.githubusercontent.com/tatyshev/vscode-antimaterial/master/images/monokai.png' },
+  { name: 'package.json', src: 'https://raw.githubusercontent.com/tatyshev/fetch-to-tar/master/package.json' },
+  // { name: 'dracula.png', src: 'https://raw.githubusercontent.com/tatyshev/vscode-antimaterial/master/images/dracula.png' },
+  // { name: 'material.png', src: 'https://raw.githubusercontent.com/tatyshev/vscode-antimaterial/master/images/material.png' },
+  // { name: 'monokai.png', src: 'https://raw.githubusercontent.com/tatyshev/vscode-antimaterial/master/images/monokai.png' },
 ];
 
 export default class App extends Component<{}, IState> {
