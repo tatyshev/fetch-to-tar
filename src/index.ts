@@ -58,7 +58,7 @@ const createPseudoProgress = () => {
 const performBlob: TPerformer = async (props: IPerformerProps) => {
   const { storage, response, onProgress, fileName } = props;
   const pseudoProgress = createPseudoProgress();
-  const timer = setInterval(() => onProgress(pseudoProgress()), 250);
+  const timer = setInterval(() => onProgress(pseudoProgress()), 500);
 
   try {
     const blob = await response.blob();
