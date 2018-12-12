@@ -50,7 +50,7 @@ const createPseudoProgress = () => {
   let progress = 1;
 
   return () => {
-    progress = Math.random() * (progress / 1.1);
+    progress = Math.random() * (progress / 1.5);
     return progress;
   };
 };
