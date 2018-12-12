@@ -10,7 +10,8 @@ interface IState {
 }
 
 const ENTRIES = [
-  { name: 'package.json', src: 'https://raw.githubusercontent.com/tatyshev/fetch-to-tar/master/package.json' },
+  { name: 'pomidorus.json', src: 'https://raw.githubusercontent.com/tatyshev/pomidorus/master/package.json' },
+  { name: 'fetch-to-tar.json', src: 'https://raw.githubusercontent.com/tatyshev/fetch-to-tar/master/package.json' },
   // { name: 'dracula.png', src: 'https://raw.githubusercontent.com/tatyshev/vscode-antimaterial/master/images/dracula.png' },
   // { name: 'material.png', src: 'https://raw.githubusercontent.com/tatyshev/vscode-antimaterial/master/images/material.png' },
   // { name: 'monokai.png', src: 'https://raw.githubusercontent.com/tatyshev/vscode-antimaterial/master/images/monokai.png' },
@@ -52,7 +53,7 @@ export default class App extends Component<{}, IState> {
 
     return (
       <div className="b-sandbox">
-        <progress max={max} value={value}/> ({Math.floor(value)}/{max})
+        <progress max={max} value={value}/> ({value}/{max})
         <br/>
         <button className="b-sandbox__button" onClick={this.perform}>
           Perform

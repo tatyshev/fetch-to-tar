@@ -6,6 +6,15 @@ import { sizeOf, readStream } from './network';
 import { createFileBlock, createEmptyBlock } from './tar';
 
 type TName = string | Promise<string> | ((resp: Response) => string | Promise<string>);
+type TProgress = (value: number) => void;
+type TPerformer = (props: IPerformerProps) => void;
+
+interface IPerformerProps {
+  fileName: string;
+  response: Response;
+  storage: IStorage;
+  onProgress: TProgress;
+}
 
 interface IEntry {
   name: TName;
@@ -15,7 +24,7 @@ interface IEntry {
 interface IPerformEntryProps {
   entries: IEntry[];
   storage: IStorage;
-  onProgress: (value: number) => void;
+  onProgress: TProgress;
 }
 
 interface IDefaultProps {
@@ -37,6 +46,66 @@ const resolveName = (target: TName, response: Response) => {
   return toPromise(result) as Promise<string>;
 };
 
+const createPseudoProgress = () => {
+  let progress = 1;
+
+  return () => {
+    progress = progress / 2;
+    return progress;
+  };
+};
+
+const performBlob: TPerformer = async (props: IPerformerProps) => {
+  const { storage, response, onProgress, fileName } = props;
+  const { cursor } =  storage;
+  const pseudoProgress = createPseudoProgress();
+  const timer = setInterval(() => onProgress(pseudoProgress()), 100);
+  let size: number|null = null;
+
+  try {
+    const blob = await response.blob();
+    size = blob.size;
+    await storage.addBlob(blob);
+    await storage.putBlob(cursor, createFileBlock({ size, name: fileName }));
+    const padding = BLOCK_SIZE - (blob.size % BLOCK_SIZE);
+    await storage.addBlob(createEmptyBlock(padding));
+  } catch (e) {
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
+};
+
+const performStream: TPerformer = async (props: IPerformerProps) => {
+  const { storage, response, onProgress, fileName } = props;
+
+  const { cursor } = storage;
+  const reader = (response.body as ReadableStream).getReader();
+  const pseudoProgress = createPseudoProgress();
+  const size = sizeOf(response);
+
+  let realSize = 0;
+
+  await storage.putBlob(cursor, createFileBlock({ size, name: fileName }));
+
+  await readStream(reader, (chunk) => {
+    realSize += chunk.length;
+
+    onProgress(size !== 0 ? chunk.length / size : pseudoProgress());
+    return storage.addBlob(new Blob([chunk]));
+  });
+
+  const padding = BLOCK_SIZE - (realSize % BLOCK_SIZE);
+  await storage.addBlob(createEmptyBlock(padding));
+
+  if (realSize !== size) {
+    await storage.putBlob(cursor, createFileBlock({
+      size: realSize,
+      name: fileName,
+    }));
+  }
+};
+
 const perform = async (props: IPerformEntryProps, i = 0) => {
   const { entries, storage, onProgress } = props;
   const entry = entries[i];
@@ -51,49 +120,13 @@ const perform = async (props: IPerformEntryProps, i = 0) => {
   }
 
   const fileName = await resolveName(name, response);
-  const size = sizeOf(response);
-  let realSize = 0;
 
-  // Some browser do not support body and body.getReader()
-  // We just use whole blob
-  if (response.body == null) {
-    onProgress(0.5);
-    const blob = await response.blob();
-    realSize = blob.size;
-    await storage.addBlob(blob);
-    onProgress(0.5);
-    await perform(props, i + 1);
-    return;
+  if (response.body) {
+    await performStream({ fileName, response, storage, onProgress });
+  } else {
+    await performBlob({ fileName, response, storage, onProgress });
   }
 
-  const reader = response.body.getReader();
-  await storage.addBlob(createFileBlock({ size, name: fileName }));
-  const headIndex = storage.cursor;
-
-  await readStream(reader, (chunk) => {
-    realSize += chunk.length;
-
-    let pseudoSize = 1;
-
-    if (size !== 0) {
-      onProgress(chunk.length / size);
-    } else {
-      pseudoSize = pseudoSize / 42;
-      onProgress(pseudoSize);
-    }
-
-    return storage.addBlob(new Blob([chunk]));
-  });
-
-  if (size !== realSize) {
-    await storage.putBlob(headIndex, createFileBlock({
-      size: realSize,
-      name: fileName,
-    }));
-  }
-
-  const padding = BLOCK_SIZE - ((size || realSize) % BLOCK_SIZE);
-  await storage.addBlob(createEmptyBlock(padding));
   await perform(props, i + 1);
 };
 
@@ -124,7 +157,7 @@ export default async ({ entries, onProgress }: IDefaultProps): Promise<Blob> => 
   }
 
   if (blobs == null) {
-    throw new Error("Can't build tar from empty blobs");
+    throw new Error("Can't build tar archive from empty blobs");
   }
 
   return new Blob(blobs);
