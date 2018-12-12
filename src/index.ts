@@ -50,24 +50,23 @@ const createPseudoProgress = () => {
   let progress = 1;
 
   return () => {
-    progress = progress / 2;
+    progress = progress / 2.5;
     return progress;
   };
 };
 
 const performBlob: TPerformer = async (props: IPerformerProps) => {
   const { storage, response, onProgress, fileName } = props;
-  const { cursor } =  storage;
   const pseudoProgress = createPseudoProgress();
-  const timer = setInterval(() => onProgress(pseudoProgress()), 100);
-  let size: number|null = null;
+  const timer = setInterval(() => onProgress(pseudoProgress()), 250);
 
   try {
     const blob = await response.blob();
-    size = blob.size;
+    const size = blob.size;
+    const padding = BLOCK_SIZE - (size % BLOCK_SIZE);
+
+    await storage.addBlob(createFileBlock({ size, name: fileName }));
     await storage.addBlob(blob);
-    await storage.putBlob(cursor, createFileBlock({ size, name: fileName }));
-    const padding = BLOCK_SIZE - (blob.size % BLOCK_SIZE);
     await storage.addBlob(createEmptyBlock(padding));
   } catch (e) {
     throw e;
@@ -78,19 +77,16 @@ const performBlob: TPerformer = async (props: IPerformerProps) => {
 
 const performStream: TPerformer = async (props: IPerformerProps) => {
   const { storage, response, onProgress, fileName } = props;
-
-  const { cursor } = storage;
   const reader = (response.body as ReadableStream).getReader();
   const pseudoProgress = createPseudoProgress();
   const size = sizeOf(response);
-
   let realSize = 0;
 
-  await storage.putBlob(cursor, createFileBlock({ size, name: fileName }));
+  await storage.addBlob(createEmptyBlock());
+  const { cursor } = storage;
 
   await readStream(reader, (chunk) => {
     realSize += chunk.length;
-
     onProgress(size !== 0 ? chunk.length / size : pseudoProgress());
     return storage.addBlob(new Blob([chunk]));
   });
@@ -98,12 +94,10 @@ const performStream: TPerformer = async (props: IPerformerProps) => {
   const padding = BLOCK_SIZE - (realSize % BLOCK_SIZE);
   await storage.addBlob(createEmptyBlock(padding));
 
-  if (realSize !== size) {
-    await storage.putBlob(cursor, createFileBlock({
-      size: realSize,
-      name: fileName,
-    }));
-  }
+  await storage.putBlob(cursor, createFileBlock({
+    size: realSize,
+    name: fileName,
+  }));
 };
 
 const perform = async (props: IPerformEntryProps, i = 0) => {
