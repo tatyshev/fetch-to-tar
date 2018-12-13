@@ -136,40 +136,35 @@ const performStream: TPerformer = async (props: IPerformerProps) => {
 };
 
 const loop = async (props: ILoopProps, i = 0) => {
-  try {
-    const { entries, storage, onProgress, cancelable } = props;
-    const entry = entries[i];
+  const { entries, storage, onProgress, cancelable } = props;
+  const entry = entries[i];
 
-    if (entry == null) return;
+  if (entry == null) return;
 
-    const { name, src } = entry;
-    const response = await fetch(src);
+  const { name, src } = entry;
+  const response = await fetch(src);
 
-    if (!response.ok) {
-      throw new Error(`Can't fetch given url "${src}"`);
-    }
-
-    const fileName = await resolveName(name, response);
-
-    const perfomerProps = {
-      fileName,
-      response,
-      storage,
-      onProgress,
-      cancelable,
-    };
-
-    if (response.body) {
-      await performStream(perfomerProps);
-    } else {
-      await performBlob(perfomerProps);
-    }
-
-    await loop(props, i + 1);
-  } catch (e) {
-    console.log('ASDADASDA');
-    throw e;
+  if (!response.ok) {
+    throw new Error(`Can't fetch given url "${src}"`);
   }
+
+  const fileName = await resolveName(name, response);
+
+  const perfomerProps = {
+    fileName,
+    response,
+    storage,
+    onProgress,
+    cancelable,
+  };
+
+  if (response.body) {
+    await performStream(perfomerProps);
+  } else {
+    await performBlob(perfomerProps);
+  }
+
+  await loop(props, i + 1);
 };
 
 const perform = async ({ entries, cancelable , onProgress }: IPerformProps): Promise<Blob> => {
