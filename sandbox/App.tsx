@@ -1,4 +1,5 @@
 /* tslint:disable max-line-length */
+/* tslint:disable no-empty */
 
 import fetchToTar from '../src';
 import React, { Component } from 'react';
@@ -17,6 +18,8 @@ const ENTRIES = [
   { name: 'monokai.png', src: 'https://raw.githubusercontent.com/tatyshev/vscode-antimaterial/master/images/monokai.png' },
 ];
 
+const noop = () => {};
+
 export default class App extends Component<{}, IState> {
   state = {
     value: 0,
@@ -24,15 +27,19 @@ export default class App extends Component<{}, IState> {
     error: null,
   };
 
+  cancel: null | (() => void) = noop;
+
   perform = () => {
-    const fetching = fetchToTar({
+    const { promise, cancel } = fetchToTar({
       entries: ENTRIES,
       onProgress: (value, max) => {
         this.setState({ value, max });
       },
     });
 
-    fetching.then((blob) => {
+    this.cancel = cancel;
+
+    promise.then((blob) => {
       const link = document.createElement('a');
       link.download = `${Date.now()}.tar`;
       link.href = URL.createObjectURL(blob);
@@ -43,7 +50,7 @@ export default class App extends Component<{}, IState> {
       setTimeout(() => document.body.removeChild(link));
     });
 
-    fetching.catch((err) => {
+    promise.catch((err) => {
       this.setState({ error: err });
     });
   }
@@ -57,6 +64,10 @@ export default class App extends Component<{}, IState> {
         <br/>
         <button className="b-sandbox__button" onClick={this.perform}>
           Perform
+        </button>
+
+        <button onClick={this.cancel}>
+          Cancel
         </button>
 
         <br/>
