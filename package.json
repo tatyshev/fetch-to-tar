@@ -2,9 +2,15 @@
   "name": "fetch-to-tar",
   "version": "0.0.4",
   "author": "Ruslan Tatyshev <ruslan.tatyshev@gmail.com>",
+  "description": "Dowload multiple urls into single .tar archive",
   "main": "dist/fetch-to-tar.js",
   "module": "dist/fetch-to-tar.mjs",
   "license": "MIT",
+  "homepage": "https://github.com/tatyshev/fetch-to-tar",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:tatyshev/fetch-to-tar.git"
+  },
   "scripts": {
     "demo": "parcel sandbox/index.html",
     "build": "./scripts/build.sh",
