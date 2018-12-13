@@ -14,7 +14,11 @@
 import fetchToTar from 'fetch-to-tar';
 import saveAs from 'file-saver';
 
-const { promise } = fetchToTar({
+/**
+ * promise - Promise that resolves builded tar archive blob
+ * cancel - Function that abort the building of the archive
+ */
+const { promise, cancel } = fetchToTar({
   entries: [
     { name: 'foo.txt', src: 'http://example.com/foo.txt' },
     { name: 'bar.txt', src: 'http://example.com/bar.txt' },
@@ -27,3 +31,16 @@ const { promise } = fetchToTar({
 
 promise.then(blob => saveAs(blob));
 ```
+
+## Installation
+
+You can install `fetch-to-tar` using `npm` or `yarn`
+
+```
+npm install fetch-to-tar
+yarn add fetch-to-tar
+```
+
+## License
+
+MIT © [Ruslan Tatyshev](http://github.com/tatyshev)
