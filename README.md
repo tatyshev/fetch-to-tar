@@ -25,11 +25,11 @@ const { promise, cancel } = fetchToTar({
   ],
 
   onProgress(value, max) {
-    console.log(`Progress: ${valie}/${max}`);
+    console.log(`Progress: ${value}/${max}`);
   },
 });
 
-promise.then(blob => saveAs(blob));
+promise.then(blob => saveAs(blob, 'files.tar'));
 ```
 
 ## Installation
