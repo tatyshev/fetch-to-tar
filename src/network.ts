@@ -11,22 +11,26 @@ interface IReadLoopParams {
   reader: ReadableStreamReader;
   onChunk: TChunkCallback;
   onSuccess: () => void;
-  onError: () => void;
+  onError: (err: any) => void;
 }
 
 const loopOverStream = (params: IReadLoopParams) => {
   const { reader, onChunk, onSuccess, onError } = params;
 
   reader.read().then((result) => {
-    if (result.done && result.value === undefined) {
-      onSuccess();
-      return;
+    try {
+      if (result.done && result.value === undefined) {
+        onSuccess();
+        return;
+      }
+
+      const next = toPromise(onChunk(result.value));
+
+      next.then(() => loopOverStream(params));
+      next.catch(onError);
+    } catch (e) {
+      onError(e);
     }
-
-    const next = toPromise(onChunk(result.value));
-
-    next.then(() => loopOverStream(params));
-    next.catch(onError);
   });
 };
 

@@ -36,8 +36,9 @@ interface ILoopProps {
 
 interface IPerformProps {
   entries: IEntry[];
+  storage: IStorage;
   cancelable: ICancelable;
-  onProgress?: (value: number, max: number) => void;
+  onProgress: (value: number, max: number) => void;
 }
 
 interface IDefaultProps {
@@ -59,6 +60,8 @@ const resolveName = (target: TName, response: Response) => {
   return toPromise(result) as Promise<string>;
 };
 
+const noop = () => {}; // tslint:disable-line no-empty
+
 const createPseudoProgress = () => {
   let progress = 1;
 
@@ -74,7 +77,7 @@ const createCancelable = (): ICancelable => {
   return {
     cancel: () => { cancelled = true; },
     check: () => {
-      if (cancelled) throw new Error('fetchToTar cancelled');
+      if (cancelled) throw new Error('Fetching to tar cancelled by user');
     },
   };
 };
@@ -89,8 +92,8 @@ const performBlob: TPerformer = async (props: IPerformerProps) => {
     cancelable.check();
 
     const tick = () => {
-      onProgress(pseudoProgress());
       cancelable.check();
+      onProgress(pseudoProgress());
     };
 
     timer = setInterval(tick, 500);
@@ -118,6 +121,8 @@ const performStream: TPerformer = async (props: IPerformerProps) => {
 
   await storage.addBlob(createEmptyBlock());
   const { cursor } = storage;
+
+  cancelable.check();
 
   await readStream(reader, (chunk) => {
     cancelable.check();
@@ -167,32 +172,26 @@ const loop = async (props: ILoopProps, i = 0) => {
   await loop(props, i + 1);
 };
 
-const perform = async ({ entries, cancelable , onProgress }: IPerformProps): Promise<Blob> => {
-  const storage = window.indexedDB ? new Idb() : new Ram();
+const perform = async (props: IPerformProps): Promise<Blob> => {
+  const { entries, cancelable, storage, onProgress } = props;
   const entryCount = entries.length;
 
   let progress = 0;
   let blobs: Blob[] | null = null;
 
-  try {
-    await loop({
-      entries,
-      storage,
-      cancelable,
-      onProgress: (value) => {
-        progress += value;
-        if (onProgress) onProgress(progress, entryCount);
-      },
-    });
+  await loop({
+    entries,
+    storage,
+    cancelable,
+    onProgress: (value) => {
+      progress += value;
+      onProgress(progress, entryCount);
+    },
+  });
 
-    blobs = await storage.getBlobs();
+  blobs = await storage.getBlobs();
 
-    if (onProgress) onProgress(entryCount, entryCount);
-  } catch (e) {
-    console.error(e);
-  } finally {
-    later(() => storage.teardown());
-  }
+  onProgress(entryCount, entryCount);
 
   if (blobs == null) {
     throw new Error("Can't build tar archive from empty blobs");
@@ -202,8 +201,14 @@ const perform = async ({ entries, cancelable , onProgress }: IPerformProps): Pro
 };
 
 export default (props: IDefaultProps) => {
+  const storage = window.indexedDB ? new Idb() : new Ram();
   const cancelable = createCancelable();
-  const promise = perform({ ...props, cancelable });
+  const teardown = () => { later(() => storage.teardown()); };
+  const onProgress = props.onProgress || noop as TProgress;
+  const promise = perform({ ...props, onProgress, storage, cancelable });
+
+  promise.then(teardown);
+  promise.catch(teardown);
 
   return {
     promise,
