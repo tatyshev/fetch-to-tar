@@ -9,7 +9,7 @@ interface ITrack {
 
 const DEFAULT_STORE_NAME = 'chunks';
 const PREFIX = '__FETCH_TO_TAR_IDB__';
-const TTL = 30 * 1000;
+const TTL = 5 * 60 * 1000;
 
 export default class Idb {
   cursor = 0;
