@@ -16,8 +16,9 @@ interface IReadLoopParams {
 
 const loopOverStream = (params: IReadLoopParams) => {
   const { reader, onChunk, onSuccess, onError } = params;
+  const reading = reader.read();
 
-  reader.read().then((result) => {
+  reading.then((result) => {
     try {
       if (result.done && result.value === undefined) {
         onSuccess();
@@ -32,6 +33,8 @@ const loopOverStream = (params: IReadLoopParams) => {
       onError(e);
     }
   });
+
+  reading.catch(onError);
 };
 
 export const readStream = (reader: ReadableStreamReader, callback: TChunkCallback) => {
