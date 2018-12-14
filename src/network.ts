@@ -18,23 +18,17 @@ const loopOverStream = (params: IReadLoopParams) => {
   const { reader, onChunk, onSuccess, onError } = params;
   const reading = reader.read();
 
-  reading.then((result) => {
-    try {
+  reading
+    .then((result) => {
       if (result.done && result.value === undefined) {
         onSuccess();
         return;
       }
 
       const next = toPromise(onChunk(result.value));
-
-      next.then(() => loopOverStream(params));
-      next.catch(onError);
-    } catch (e) {
-      onError(e);
-    }
-  });
-
-  reading.catch(onError);
+      return next.then(() => loopOverStream(params));
+    })
+    .catch(onError);
 };
 
 export const readStream = (reader: ReadableStreamReader, callback: TChunkCallback) => {
