@@ -29,7 +29,7 @@ const { promise, cancel } = fetchToTar({
   },
 });
 
-promise.then(blob => saveAs(blob, 'files.tar'));
+promise.then(({ blob }) => saveAs(blob, 'files.tar'));
 ```
 
 ## Installation
