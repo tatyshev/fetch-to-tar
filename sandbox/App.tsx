@@ -12,10 +12,9 @@ interface IState {
 
 const ENTRIES = [
   { name: 'pomidorus.json', src: 'https://raw.githubusercontent.com/tatyshev/pomidorus/master/package.json' },
-  { name: 'fetch-to-tar.json', src: 'https://raw.githubusercontent.com/tatyshev/fetch-to-tar/master/package.json' },
-  { name: 'dracula.png', src: 'https://raw.githubusercontent.com/tatyshev/vscode-antimaterial/master/images/dracula.png' },
-  { name: 'material.png', src: 'https://raw.githubusercontent.com/tatyshev/vscode-antimaterial/master/images/material.png' },
-  { name: 'monokai.png', src: 'https://raw.githubusercontent.com/tatyshev/vscode-antimaterial/master/images/monokai.png' },
+  // { name: 'fetch-to-tar.json', src: 'https://raw.githubusercontent.com/tatyshev/fetch-to-tar/master/package.json' },
+  // { name: 'dracula.png', src: 'https://raw.githubusercontent.com/tatyshev/vscode-antimaterial/master/images/dracula.png' },
+  // { name: 'material.png', src: 'https://raw.githubusercontent.com/tatyshev/vscode-antimaterial/master/images/material.png' },
 ];
 
 const noop = () => {};
@@ -31,6 +30,7 @@ export default class App extends Component<{}, IState> {
 
   perform = () => {
     const { promise, cancel } = fetchToTar({
+      unpackSingle: true,
       entries: ENTRIES,
       onProgress: (value, max) => {
         this.setState({ value, max });
@@ -39,9 +39,9 @@ export default class App extends Component<{}, IState> {
 
     this.cancel = cancel;
 
-    promise.then((blob) => {
+    promise.then(({ blob, unpackedSingleFile }) => {
       const link = document.createElement('a');
-      link.download = `${Date.now()}.tar`;
+      link.download = unpackedSingleFile ? unpackedSingleFile : `${Date.now()}.tar`;
       link.href = URL.createObjectURL(blob);
 
       document.body.append(link);

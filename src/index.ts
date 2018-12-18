@@ -38,11 +38,13 @@ interface IPerformProps {
   entries: IEntry[];
   storage: IStorage;
   cancelable: ICancelable;
+  unpackSingle: boolean;
   onProgress: (value: number, max: number) => void;
 }
 
 interface IDefaultProps {
   entries: IEntry[];
+  unpackSingle?: boolean;
   onProgress?: (value: number, max: number) => void;
 }
 
@@ -51,6 +53,11 @@ interface IStorage {
   addBlob: (blob: Blob) => Promise<any>;
   putBlob: (key: any, blob: Blob) => Promise<any>;
   getBlobs: () => Promise<Blob[]>;
+}
+
+interface IResult {
+  unpackedSingleFile: string | null;
+  blob: Blob;
 }
 
 const BLOCK_SIZE = 512;
@@ -140,11 +147,11 @@ const performStream: TPerformer = async (props: IPerformerProps) => {
   }));
 };
 
-const loop = async (props: ILoopProps, i = 0) => {
+const performLoop = async (props: ILoopProps, i = 0): Promise<string[]> => {
   const { entries, storage, onProgress, cancelable } = props;
   const entry = entries[i];
 
-  if (entry == null) return;
+  if (entry == null) return [];
 
   const { name, src } = entry;
   const response = await fetch(src);
@@ -169,17 +176,27 @@ const loop = async (props: ILoopProps, i = 0) => {
     await performBlob(perfomerProps);
   }
 
-  await loop(props, i + 1);
+  const fileNames = await performLoop(props, i + 1);
+
+  return [...fileNames, fileName];
 };
 
-const perform = async (props: IPerformProps): Promise<Blob> => {
-  const { entries, cancelable, storage, onProgress } = props;
+const perform = async (props: IPerformProps): Promise<IResult> => {
+  const {
+    entries,
+    cancelable,
+    storage,
+    onProgress,
+    unpackSingle,
+  } = props;
+
   const entryCount = entries.length;
 
   let progress = 0;
   let blobs: Blob[] | null = null;
+  let unpackedSingleFile: string | null = null;
 
-  await loop({
+  const files = await performLoop({
     entries,
     storage,
     cancelable,
@@ -191,13 +208,21 @@ const perform = async (props: IPerformProps): Promise<Blob> => {
 
   blobs = await storage.getBlobs();
 
+  if (unpackSingle && files.length === 1) {
+    blobs = blobs.filter(x => x.type !== 'application/x-gtar');
+    unpackedSingleFile = files[0];
+  }
+
   onProgress(entryCount, entryCount);
 
   if (blobs == null) {
     throw new Error("Can't build tar archive from empty blobs");
   }
 
-  return new Blob(blobs);
+  return {
+    unpackedSingleFile,
+    blob: new Blob(blobs, { type: 'application/x-gtar' }),
+  };
 };
 
 export default (props: IDefaultProps) => {
@@ -205,7 +230,15 @@ export default (props: IDefaultProps) => {
   const cancelable = createCancelable();
   const teardown = () => { later(() => storage.teardown()); };
   const onProgress = props.onProgress || noop as TProgress;
-  const promise = perform({ ...props, onProgress, storage, cancelable });
+  const unpackSingle = props.unpackSingle == null ? false : props.unpackSingle;
+
+  const promise = perform({
+    ...props,
+    unpackSingle,
+    onProgress,
+    storage,
+    cancelable,
+  });
 
   promise.then(teardown);
   promise.catch(teardown);

@@ -48,7 +48,7 @@ const checksumOf = (block: Uint8Array) => {
 
 export const createEmptyBlock = (size: number = BLOCK_SIZE) => {
   const block = new Uint8Array(size).fill(0);
-  return new Blob([block]);
+  return new Blob([block], { type: 'application/x-gtar' });
 };
 
 export const createFileBlock = (params: IFileParams) => {
@@ -67,5 +67,5 @@ export const createFileBlock = (params: IFileParams) => {
   block.set(bytes('ustar'), MAGIC_OFFSET);
   block.set(checksumOf(block), CHKSUM_OFFSET);
 
-  return new Blob([block]);
+  return new Blob([block], { type: 'application/x-gtar' });
 };
