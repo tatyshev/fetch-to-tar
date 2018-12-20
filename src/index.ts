@@ -56,7 +56,7 @@ interface IStorage {
 }
 
 interface IResult {
-  unpackedSingleFile: string | null;
+  unpackedFileName: string | null;
   blob: Blob;
 }
 
@@ -194,7 +194,7 @@ const perform = async (props: IPerformProps): Promise<IResult> => {
 
   let progress = 0;
   let blobs: Blob[] | null = null;
-  let unpackedSingleFile: string | null = null;
+  let unpackedFileName: string | null = null;
 
   const files = await performLoop({
     entries,
@@ -210,7 +210,7 @@ const perform = async (props: IPerformProps): Promise<IResult> => {
 
   if (unpackSingle && files.length === 1) {
     blobs = blobs.filter(x => x.type !== 'application/x-gtar');
-    unpackedSingleFile = files[0];
+    unpackedFileName = files[0];
   }
 
   onProgress(entryCount, entryCount);
@@ -220,7 +220,7 @@ const perform = async (props: IPerformProps): Promise<IResult> => {
   }
 
   return {
-    unpackedSingleFile,
+    unpackedFileName,
     blob: new Blob(blobs, { type: 'application/x-gtar' }),
   };
 };
