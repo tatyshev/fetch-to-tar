@@ -1,5 +1,10 @@
 <h1 align="center">fetch-to-tar</h1>
 
+<p align="center">
+  <img src="https://img.shields.io/github/license/tatyshev/fetch-to-tar.svg"/>
+  <img src="https://img.shields.io/npm/v/fetch-to-tar.svg"/>
+</p>
+
 There are many great <strong>backend based solutions</strong> for downloading multiple files into one archive.
 There are many great software engineers who will tell you that this is the right way.
 
