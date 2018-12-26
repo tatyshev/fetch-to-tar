@@ -6,9 +6,8 @@
 </p>
 
 There are many great <strong>backend based solutions</strong> for downloading multiple files into one archive.
-There are many great software engineers who will tell you that this is the right way.
-
-But if you need a quick and lightweight solution that just work in a browser, then `fetch-to-tar` is for you.
+There are many great software engineers who will tell you that this is the right way. But if you need a quick and
+lightweight solution that just work in a browser, then `fetch-to-tar` is for you.
 
 ## How it works?
 `fetch-to-tar` download files in small chunks using [Fetch Api](https://developer.mozilla.org/en-US/docs/Web/API/Streams_API)
