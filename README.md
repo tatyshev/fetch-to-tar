@@ -74,8 +74,8 @@ How to cancel download:
 ```js
 const { promise, cancel } = fetchToTar({
   entries: [
-    { name: 'one/foo.txt', src: 'http://example.com/foo.txt' },
-    { name: 'two/bar.txt', src: 'http://example.com/bar.txt' },
+    { name: 'foo.txt', src: 'http://example.com/foo.txt' },
+    { name: 'bar.txt', src: 'http://example.com/bar.txt' },
   ],
 });
 
