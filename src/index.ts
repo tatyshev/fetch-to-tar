@@ -20,6 +20,7 @@ interface IPerformerProps {
   storage: IStorage;
   cancelable: ICancelable;
   onProgress: TProgress;
+  memoryBuffer: number;
 }
 
 interface IEntry {
@@ -32,6 +33,7 @@ interface ILoopProps {
   storage: IStorage;
   cancelable: ICancelable;
   onProgress: TProgress;
+  memoryBuffer: number;
 }
 
 interface IPerformProps {
@@ -40,12 +42,14 @@ interface IPerformProps {
   cancelable: ICancelable;
   unpackSingle: boolean;
   onProgress: (value: number, max: number) => void;
+  memoryBuffer: number;
 }
 
 interface IDefaultProps {
   entries: IEntry[];
   unpackSingle?: boolean;
   onProgress?: (value: number, max: number) => void;
+  memoryBuffer?: number;
 }
 
 interface IStorage {
@@ -61,6 +65,7 @@ interface IResult {
 }
 
 const BLOCK_SIZE = 512;
+const DEFAULT_MEMORY_BUFFER = 1024 * 1024;
 
 const resolveName = (target: TName, response: Response) => {
   const result = typeof target === 'function' ? target(response) : target;
@@ -121,10 +126,14 @@ const performBlob: TPerformer = async (props: IPerformerProps) => {
 
 const performStream: TPerformer = async (props: IPerformerProps) => {
   const { storage, response, fileName, cancelable, onProgress } = props;
+  const memoryBuffer = props.memoryBuffer || DEFAULT_MEMORY_BUFFER;
   const reader = (response.body as ReadableStream).getReader();
   const pseudoProgress = createPseudoProgress();
   const size = sizeOf(response);
   let realSize = 0;
+
+  let chunks: Uint8Array[] = [];
+  let chunksSize = 0;
 
   await storage.addBlob(createEmptyBlock());
   const { cursor } = storage;
@@ -132,10 +141,19 @@ const performStream: TPerformer = async (props: IPerformerProps) => {
   cancelable.check();
 
   await readStream(reader, (chunk) => {
-    cancelable.check();
     realSize += chunk.length;
     onProgress(size !== 0 ? chunk.length / size : pseudoProgress());
-    return storage.addBlob(new Blob([chunk]));
+    cancelable.check();
+
+    chunks.push(chunk);
+    chunksSize += chunk.length;
+
+    if (chunksSize >= memoryBuffer || chunk.length === 0) {
+      const promise = storage.addBlob(new Blob(chunks));
+      chunks = [];
+      chunksSize = 0;
+      return promise;
+    }
   });
 
   const padding = BLOCK_SIZE - (realSize % BLOCK_SIZE);
@@ -148,7 +166,7 @@ const performStream: TPerformer = async (props: IPerformerProps) => {
 };
 
 const performLoop = async (props: ILoopProps, i = 0): Promise<string[]> => {
-  const { entries, storage, onProgress, cancelable } = props;
+  const { entries, storage, onProgress, cancelable, memoryBuffer } = props;
   const entry = entries[i];
 
   if (entry == null) return [];
@@ -168,6 +186,7 @@ const performLoop = async (props: ILoopProps, i = 0): Promise<string[]> => {
     storage,
     onProgress,
     cancelable,
+    memoryBuffer,
   };
 
   if (response.body) {
@@ -188,6 +207,7 @@ const perform = async (props: IPerformProps): Promise<IResult> => {
     storage,
     onProgress,
     unpackSingle,
+    memoryBuffer,
   } = props;
 
   const entryCount = entries.length;
@@ -200,6 +220,7 @@ const perform = async (props: IPerformProps): Promise<IResult> => {
     entries,
     storage,
     cancelable,
+    memoryBuffer,
     onProgress: (value) => {
       progress += value;
       onProgress(progress, entryCount);
@@ -231,6 +252,7 @@ export default (props: IDefaultProps) => {
   const teardown = () => { later(() => storage.teardown()); };
   const onProgress = props.onProgress || noop as TProgress;
   const unpackSingle = props.unpackSingle == null ? false : props.unpackSingle;
+  const memoryBuffer = props.memoryBuffer || DEFAULT_MEMORY_BUFFER;
 
   const promise = perform({
     ...props,
@@ -238,6 +260,7 @@ export default (props: IDefaultProps) => {
     onProgress,
     storage,
     cancelable,
+    memoryBuffer,
   });
 
   promise.then(teardown);

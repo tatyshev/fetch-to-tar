@@ -11,10 +11,10 @@ interface IState {
 }
 
 const ENTRIES = [
-  { name: 'pomidorus.json', src: 'https://raw.githubusercontent.com/tatyshev/pomidorus/master/package.json' },
-  { name: 'fetch-to-tar.json', src: 'https://raw.githubusercontent.com/tatyshev/fetch-to-tar/master/package.json' },
+  { name: 'BigBuckBunny.mp4', src: 'https://raw.githubusercontent.com/mnaseersj/BigBuckBunny/master/BigBuckBunny_640x360.mp4' },
   { name: 'dracula.png', src: 'https://raw.githubusercontent.com/tatyshev/vscode-antimaterial/master/images/dracula.png' },
   { name: 'material.png', src: 'https://raw.githubusercontent.com/tatyshev/vscode-antimaterial/master/images/material.png' },
+  { name: 'db.json', src: 'https://raw.githubusercontent.com/jshttp/mime-db/master/db.json' },
 ];
 
 const noop = () => {};

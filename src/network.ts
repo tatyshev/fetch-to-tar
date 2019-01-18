@@ -22,6 +22,7 @@ const loopOverStream = (params: IReadLoopParams) => {
     .then((result) => {
       if (result.done && result.value === undefined) {
         onSuccess();
+        onChunk(new Uint8Array());
         return;
       }
 
