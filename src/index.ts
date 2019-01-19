@@ -125,8 +125,7 @@ const performBlob: TPerformer = async (props: IPerformerProps) => {
 };
 
 const performStream: TPerformer = async (props: IPerformerProps) => {
-  const { storage, response, fileName, cancelable, onProgress } = props;
-  const memoryBuffer = props.memoryBuffer || DEFAULT_MEMORY_BUFFER;
+  const { storage, response, fileName, cancelable, onProgress, memoryBuffer } = props;
   const reader = (response.body as ReadableStream).getReader();
   const pseudoProgress = createPseudoProgress();
   const size = sizeOf(response);
