@@ -155,7 +155,9 @@ const performStream: TPerformer = async (props: IPerformerProps) => {
     }
   });
 
-  const padding = BLOCK_SIZE - (realSize % BLOCK_SIZE);
+  const mod = (realSize % BLOCK_SIZE);
+  const padding = mod !== 0 ? BLOCK_SIZE - mod : 0;
+
   await storage.addBlob(createEmptyBlock(padding));
 
   await storage.putBlob(cursor, createFileBlock({
