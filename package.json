@@ -1,6 +1,6 @@
 {
   "name": "fetch-to-tar",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "author": "Ruslan Tatyshev <ruslan.tatyshev@gmail.com>",
   "description": "Dowload multiple urls into single .tar archive",
   "main": "dist/fetch-to-tar.js",
