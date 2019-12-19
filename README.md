@@ -84,7 +84,7 @@ if (SomeCondition) {
 }
 ```
 
-You can use enry name for creating folder structure:
+You can use any name for creating folder structure:
 
 ```js
 fetchToTar({
